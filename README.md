@@ -13,7 +13,7 @@ Please use this script at your own risk, and to learn how such a task can be don
 
 ## Usage:
 
-_First, review the script! Figment is trust-worthy, but don't take our word for it!_ Then either download and run, or use this magic incantation:
+_First, review the script! Figment is trust-worthy, but don't take our word for it!_ Once satisfied, either [download](https://git.io/fx17m) and run, or use this magic incantation:
 
     bash <( curl -s https://git.io/fx17m ) --help
     
@@ -26,7 +26,7 @@ This will show the various options and how to use them. For the lazy (using `tez
 Here I'm on an Alphanet node using the docker scripts -- sending 2 addresses 1 XTZ each:
 
 ``` plain
-$ bash tezos-batch-payments.bash --docker alphanet --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
+$ bash <( curl -s https://git.io/fx17m ) --docker alphanet --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
 ****************************************************************
 ***             Tezos Batch Payout Script                    ***
 ***                by Figment Networks                       ***
