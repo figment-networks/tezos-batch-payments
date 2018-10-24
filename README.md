@@ -23,7 +23,7 @@ Please use this script at your own risk, and to learn how such a task can be don
 
 ## Usage
 
-_First, review the script! Figment is trust-worthy, but don't take our word for it!_ Once satisfied, either [download](https://git.io/fxMmp) and run, or use this magic incantation:
+_First, review the script! Figment is trust-worthy, but don't take our word for it!_ Once satisfied, start up `screen` or `tmux`, [download](https://git.io/fxMmp) and run &mdash; or use this magic incantation:
 
     bash <( curl -sL https://git.io/fxMmp ) --help
     
@@ -90,7 +90,7 @@ Check out the operation [on TzScan](http://alphanet.tzscan.io/oomdkDCsLDbJNFqd8X
 
 ## Other Uses
 
-If you check out the usage into by running `--help` you'll find several handy options.
+If you check out the usage info by running `--help` you'll find several handy options.
 
 For example:
 

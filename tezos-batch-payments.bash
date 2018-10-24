@@ -366,15 +366,13 @@ function simulateTransactions() {
   else
     run_response=$(cleanCr "$run_response")
     log "Results from simulation run: $run_response"
-    bash -c "echo '$run_response' | jq -e '.contents | map(select(.metadata.operation_result.status == \"failed\")) | length == 0'"
+    bash -c "echo '$run_response' | jq -e '.contents | map(select(.metadata.operation_result.status == \"failed\")) | length == 0' > /dev/null 2>&1"
     if [ ! $? -eq 0 ]; then
       error "Transaction simulation failed. Cannot continue!" "$run_response"
     else
       echo "OK"
     fi
   fi
-
-  echo
 }
 
 function sendBatch() {
@@ -603,6 +601,7 @@ function main() {
   else
     echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRINGꜩ)..."
   fi
+  echo
 
 
   ###
