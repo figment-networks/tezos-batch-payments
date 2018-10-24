@@ -25,11 +25,11 @@ Please use this script at your own risk, and to learn how such a task can be don
 
 _First, review the script! Figment is trust-worthy, but don't take our word for it!_ Once satisfied, either [download](https://git.io/fxMmp) and run, or use this magic incantation:
 
-    bash <( curl -s https://git.io/fxMmp ) --help
+    bash <( curl -sL https://git.io/fxMmp ) --help
     
 This will show the various options and how to use them. For the lazy (using `tezos-client` in the current directory), here's an example of sending a donation of 1 XTZ to [Figment's Bakery](https://figment.network/tezos/bakery) :wink::
 
-    bash <( curl -s https://git.io/fxMmp ) --transactions tz1Scdr2HsZiQjc7bHMeBbmDRXYVvdhjJbBh=1000000
+    bash <( curl -sL https://git.io/fxMmp ) --transactions tz1Scdr2HsZiQjc7bHMeBbmDRXYVvdhjJbBh=1000000
 
 
 ## How does it work?
