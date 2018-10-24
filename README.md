@@ -125,3 +125,5 @@ Thanks to:
 ## Feedback Welcome
 
 Please let us know what you think or if you have any ideas for improvements! [Join our Discord](https://discord.gg/zqBZ2UG)
+
+Interested in delegating with us? [Visit our Bakery](https://figment.network/tezos/bakery)
