@@ -1,6 +1,6 @@
 # Tezos Batch Payments
-All-in-one script for securely batching multiple Tezos payments.
 
+All-in-one script for bakers to securely batch delegator reward payments.
 
 Made with :heart: by<br/>
 <a href='https://figment.network'><img alt='Figment Networks' src='https://figment.network/figment-logo.png' height='32px' align='bottom' /></a>
@@ -48,10 +48,10 @@ First some context - we discussed and thought carefully about a sensible way to 
 
 ## Example
 
-Here I'm on an Alphanet node using the docker scripts -- sending 2 addresses 1 XTZ each:
+Here I'm on an Alphanet node and sending 2 addresses 1 XTZ each:
 
 ``` plain
-$ bash <( curl -s https://git.io/fx17m ) --docker alphanet --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
+$ bash <( curl -s https://git.io/fx17m ) --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
 ****************************************************************
 ***             Tezos Batch Payout Script                    ***
 ***                by Figment Networks                       ***
@@ -86,6 +86,24 @@ DONE
 ```
 
 Check out the operation [on TzScan](http://alphanet.tzscan.io/oomdkDCsLDbJNFqd8X6ftfaLLm5iGWWqhyYoNcjDVC3L1D8uoCG)
+
+
+## Other Uses
+
+If you check out the usage into by running `--help` you'll find several handy options.
+
+For example:
+
+- If you're using the docker script on the machine you're doing payouts with, you can use the `--docker NETWORK` (e.g. `mainnet`) option.
+- If you have a lot of transactions you don't have to pass them all on the command line. Make a file with one `ADDR=AMOUNT` per line and use `--transactions-file path-to-file`.
+- `--check` will simply confirm the transactions were passed correctly and report the total number of addresses and XTZ required.
+- This is a generic payment batching tool, as well:
+
+  ```
+  bash <( curl -sL https://git.io/fxMmp ) --use existing-alias --skip-funding --transactions ADDR1=AMOUNT1,ADDR2=AMOUNT2
+  ```
+
+  This command will not use a burner address and instead send from an existing local alias. It also won't ask that the account be funded with the total!
 
 
 ## Possible Issues
