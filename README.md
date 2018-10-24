@@ -97,13 +97,13 @@ Besides that, the 'simulation' step currently just simulates _all_ transactions 
 Finally, this is not fully 'automated' currently. It requires a human to run it and then potentially to do something with the operation hashes. We're thinking about ways to further automate this process. In theory we could keep our float unencrypted on a machine, for example... And having the operation results in a machine readable format like JSON would be needed in that case so we could still provide relevant links to delegators.
 
 
-### Acknowledgments
+## Acknowledgments
 
 Thanks to:
-- [Bake'n'Rolls](https://bakenrolls.com/) for their helpful research and [blog post](https://medium.com/@bakenrolls/sending-multiple-transactions-in-one-batch-using-tezos-rpc-6cab3a21f254) which helped us get this running.
+- [Bake'n'Rolls](https://bakenrolls.com/) for their helpful research and [blog post](https://medium.com/@bakenrolls/sending-multiple-transactions-in-one-batch-using-tezos-rpc-6cab3a21f254) which was instrumental in getting this running.
 - [Obsidian Systems](https://obsidian.systems/) for hosting the friendliest Tezos Baking Slack Community around, where we asked plenty of questions during the process.
 
 
-### Feedback Welcome
+## Feedback Welcome
 
 Please let us know what you think or if you have any ideas for improvements! [Join our Discord](https://discord.gg/zqBZ2UG)
