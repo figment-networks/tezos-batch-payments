@@ -650,9 +650,8 @@ function main() {
 
 
   ###
-  ### Paginate the transactions in batches of 30,
-  ### since the maximum operation size seems to be 16k,
-  ### this should give us plenty of headroom
+  ### Paginate the transactions in batches,
+  ### the maximum operation size is 16k
   ###
 
   PAGE_SIZE=100
