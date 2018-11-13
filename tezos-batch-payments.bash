@@ -240,7 +240,7 @@ function setup() {
 
     ACCOUNT_NAME="burner-`date +%Y-%m-%02d`-$RANDOM"
     echo -n 'Generating burner keys... '
-    bash -c "$CLIENT_CMD gen keys $ACCOUNT_NAME > /dev/null 2>&1"
+    $CLIENT_CMD gen keys $ACCOUNT_NAME
     if [ ! $? -eq 0 ]; then
       echo "FAILED"
       exit 1
@@ -447,8 +447,12 @@ function sendBatch() {
 
   echo -n "  Signing operation... "
   local ed_signature=""
-  local signing_response=$($CLIENT_CMD sign bytes 0x03$operation_bytes for $ACCOUNT_NAME)
-  if ! rpcResponseOk "$signing_response" $?; then
+  local tempfile=`mktemp`
+  $CLIENT_CMD sign bytes 0x03$operation_bytes for $ACCOUNT_NAME | tee "$tempfile"
+  local exit_code="${PIPESTATUS[0]}"
+  local signing_response=$(cat "$tempfile")
+  rm "$tempfile"
+  if ! rpcResponseOk "$signing_response" $exit_code; then
     error "Invalid signing response!" "$signing_response"
   else
     ed_signature=$(echo -n "$signing_response" | extractRpcResponseField "Signature")
@@ -694,7 +698,7 @@ function main() {
 
   if [ -z $EXISTING_ACCOUNT ] && [[ $PURGE_BURNER == 'Y' ]]; then
     echo -n "Purging burner address... "
-    bash -c "$CLIENT_CMD forget address $ACCOUNT_NAME --force > /dev/null 2>&1"
+    $CLIENT_CMD forget address $ACCOUNT_NAME --force
     if [ ! $? -eq 0 ]; then
       echo "FAILED"
     else
