@@ -11,7 +11,7 @@ Made with :heart: by<br/>
 
 ## Disclaimer
 
-Please use this script at your own risk, and to learn how such a task can be done. We have made reasonable efforts to at least never lose funds (eg by sending to the wrong place or by purging an intermediary/burner account that has funds), but this is all provided with _no warranty whatsoever_!
+Please use this script at your own risk, and to learn how such a task can be done. We have made reasonable efforts to at least never lose funds (eg by sending to the wrong place), but this is all provided with _no warranty whatsoever_!
 
 
 ## Dependencies
@@ -36,14 +36,14 @@ This will show the various options and how to use them. For the lazy (using `tez
 
 First some context - we discussed and thought carefully about a sensible way to handle payments of baking rewards. Here is what we came up with:
 
-1. The script first creates a one-time-use 'burner' address local on your machine.
-1. Conceptually, you'll be wanting to send rewards from your baker account, but this is not ideal. We don't want to have a 'spending ledger' for our main baking account outside of our bank vault. So how to fund the burner? To facilitate this, we setup a 'float' ledger which holds some reasonable amount of upcoming rewards we will need to pay out in the short term. This float ledger can be cloned and provided to the people who need to handle payouts.
-1. The script asks you to fund the burner account with the total amount from your specified transactions. Then you paste the operation hash which the script then uses to wait for confirmation.
+1. The script makes use of a 'float' account on a system with a running Tezos node.
+1. Conceptually, you'll be wanting to send rewards from your baker account, but this is not ideal. We don't want to have a 'spending' Ledger Nano S for our main baking account outside of our bank vault. So how to fund the float? To facilitate this, we setup a second Ledger which holds some reasonable amount of upcoming rewards we will need to pay out in the short term. This Ledger can be cloned and provided to the people who need to handle payouts.
+1. The script asks you to fund the float account with the total amount from your specified transactions (+fees). Then you paste the operation hash which the script uses to wait for confirmation.
 1. Next, a simulation is run which essentially is just an injection of all transactions to a special endpoint that doesn't check the signature.
 1. If the simulation passes, we can start sending pages of transactions. Currently we are grouping them into 100 transaction operations. We decided on that because a) it's plenty (tons, really) of headroom for the 16k maximum per operation, and b) we will be showing a TzScan link to the operation on our [delegator dashboard](https://figment.network/tezos/bakery), and more than 100 transactions makes the page really long.
-1. Each page is forged, signed, pre-applied (another check), injected, and then again we wait for confirmation.
+1. Each operation is forged, signed, pre-applied (another check), injected, and then again we wait for confirmation.
 1. At the end, we list out the operation hashes for reference.
-1. At this point the one-time-use burner can be purged, but for safety we don't do this unless you pass `--unsafe` to the command, so that if things went horribly wrong we won't purge an account which has funds (!)
+1. At reasonable intervals, the local float account can be rotated.
 
 
 ## Example
@@ -51,7 +51,7 @@ First some context - we discussed and thought carefully about a sensible way to 
 Here I'm on an Alphanet node and sending 2 addresses 1 XTZ each:
 
 ``` plain
-$ bash <( curl -s https://git.io/fx17m ) --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
+$ bash <( curl -s https://git.io/fx17m ) --use float --transactions tz1fHfqyAUzgyCbXs31uEjtsZ7TYaVrNr36i=1000000,tz1QYaYj9G9B2LoNj4DGrnBr1jNpb5R6VdT6=1000000
 ****************************************************************
 ***             Tezos Batch Payout Script                    ***
 ***                by Figment Networks                       ***
@@ -60,7 +60,7 @@ $ bash <( curl -s https://git.io/fx17m ) --transactions tz1fHfqyAUzgyCbXs31uEjts
 ****************************************************************
 
 Checking node access... OK
-Generating burner keys... OK
+Using account 'float'...
 
 Send 2ꜩ to tz1S5fcm3DBNRejkSY11ABij7VonPaEBYoXw
 Paste operation hash: ons97o2F2qEhqfnLafN6FzawYz7XyT2RudTdYkkMxyPMbJ4boS6
@@ -77,10 +77,6 @@ Sending transactions (page 1 of 1)...
 
 Operation Hashes:
   oomdkDCsLDbJNFqd8X6ftfaLLm5iGWWqhyYoNcjDVC3L1D8uoCG
-
-Keeping burner address...
-  Alias: burner-2018-10-24-28735
-  Address: tz1S5fcm3DBNRejkSY11ABij7VonPaEBYoXw
 
 DONE
 ```
@@ -100,10 +96,10 @@ For example:
 - This is a generic payment batching tool, as well:
 
   ```
-  bash <( curl -sL https://git.io/fxMmp ) --use existing-alias --skip-funding --transactions ADDR1=AMOUNT1,ADDR2=AMOUNT2
+  bash <( curl -sL https://git.io/fxMmp ) --use some-alias --skip-funding --transactions ADDR1=AMOUNT1,ADDR2=AMOUNT2
   ```
 
-  This command will not use a burner address and instead send from an existing local alias. It also won't ask that the account be funded with the total!
+  This command will not ask for funding and will simply send from the existing balance.
 
 
 ## Possible Issues
@@ -112,7 +108,7 @@ Currently the biggest problem is that this started as a proof-of-concept and is 
 
 Besides that, the 'simulation' step currently just simulates _all_ transactions at once, instead of page-by-page. This seems to be required because the burner account must be revealed in the first page, but the reveal won't actually make it onto the blockchain during simulation of course. So page 2 will fail due to the public key not being revealed... We're not sure how to manage this just yet. For now we figure it's better to fail early than half-finish a batch and error out.
 
-Finally, this is not fully 'automated' currently. It requires a human to run it and then potentially to do something with the operation hashes. We're thinking about ways to further automate this process. In theory we could keep our float unencrypted on a machine, for example... And having the operation results in a machine readable format like JSON would be needed in that case so we could still provide relevant links to delegators.
+Finally, this is not fully 'automated' currently. It requires a human to run it and then potentially to do something with the operation hashes. We're thinking about ways to further automate this process. We could keep a larger amount in the float and `--skip-funding`, for example... And having the operation results in a machine readable format like JSON would be needed in that case so we could still provide relevant links to delegators.
 
 
 ## Acknowledgments

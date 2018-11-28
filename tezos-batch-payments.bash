@@ -11,11 +11,9 @@ function usage() {
   echo -e "  --transactions\tTransactions to run. E.g. \`ADDR1=AMOUNT1,ADDR2=AMOUNT2,...\`"
   echo -e "  --transactions-file\tPath to a file with one \`ADDR=AMOUNT\` per line."
   echo -e "  --docker NETWORK\tUse this option if you use are using the docker scripts to run your node."
-  echo -e "  --use NAME\t\tSpecify the name (alias) of an account to use instead of creating a burner."
-  echo -e "  --reveal\t\tWith --use, no reveal will be done. Use this to override."
+  echo -e "  --use NAME\t\tSpecify the name (alias) of an account to use."
   echo -e "  --skip-funding\tDon't ask to fund the account (for instance if it's already funded)."
   echo -e "  --check\t\tCheck node access, parse provided transactions and show the total, then exit."
-  echo -e "  --unsafe\t\tPurge burner address before exiting. Not needed with --use option."
   echo -e "  --debug\t\tWill output a bunch of extra info during processing."
   echo
   echo "* Note: All 'AMOUNT' values must be in µꜩ (multiply ꜩ by 1,000,000)"
@@ -42,24 +40,9 @@ while [[ $# -gt 0 ]]; do
       SKIP_FUNDING=Y
       shift
       ;;
-    --unsafe)
-      PURGE_BURNER=Y
-      shift
-      ;;
     --use)
-      # must go after --unsafe
-      # so we never delete non-burner keys!
-      PURGE_BURNER=N
-      EXISTING_ACCOUNT=Y
       ACCOUNT_NAME=$2
-      DO_REVEAL=N
       shift
-      shift
-      ;;
-    --reveal)
-      # must go after --use
-      # so we can force a reveal if a previous run failed
-      DO_REVEAL=Y
       shift
       ;;
     --docker)
@@ -89,8 +72,8 @@ while [[ $# -gt 0 ]]; do
             "amount": $amount,
             "destination": $address,
             "storage_limit": "0",
-            "gas_limit": "500",
-            "fee": "0"
+            "gas_limit": "10300",
+            "fee": "1110"
           }]'
         )
       done
@@ -233,27 +216,19 @@ function setup() {
   fi
 
 
-  if [ -z $EXISTING_ACCOUNT ]; then
-    ###
-    ### Generate a burner address and store various info for later use
-    ###
+  ###
+  ### Ensure we have been provided an account to use
+  ###
 
-    ACCOUNT_NAME="burner-`date +%Y-%m-%02d`-$RANDOM"
-    echo -n 'Generating burner keys... '
-    $CLIENT_CMD gen keys $ACCOUNT_NAME
-    if [ ! $? -eq 0 ]; then
-      echo "FAILED"
-      exit 1
-    else
-      echo "OK"
-    fi
+  if [ -z $ACCOUNT_NAME ]; then
+    read -p "Specify float account alias: " ACCOUNT_NAME
   fi
 
   ACCOUNT_INFO=$(runAndClean "$CLIENT_CMD show address $ACCOUNT_NAME")
   ACCOUNT_ADDRESS=$(echo -n "$ACCOUNT_INFO" | extractRpcResponseField "Hash")
   ACCOUNT_PUBLIC_KEY=$(echo -n "$ACCOUNT_INFO" | extractRpcResponseField "Public Key")
 
-  log "Generated/using account $ACCOUNT_NAME with address $ACCOUNT_ADDRESS"
+  echo "Using account '$ACCOUNT_NAME'"
   echo
 }
 
@@ -549,26 +524,6 @@ function sendBatch() {
 
 
 function main() {
-  if [ -z $EXISTING_ACCOUNT ] || [[ $DO_REVEAL == "Y" ]]; then
-    ###
-    ### Since this script uses a one-time burner address
-    ### we will need to 'reveal' it as part of the operation
-    ###
-
-    REVEAL='[
-      {
-        "kind": "reveal",
-        "storage_limit": "0",
-        "gas_limit": "127",
-        "fee": "0"
-      }
-    ]'
-  else
-    REVEAL='[]'
-  fi
-
-
-
   ###
   ### Calculate the total funding needed for the entire batch
   ###
@@ -579,7 +534,7 @@ function main() {
     --argjson reveal "$REVEAL" \
     --argjson transactions "$TRANSACTIONS" \
     '
-      ($reveal + $transactions) |
+      $transactions |
       reduce .[] as $obj
         (0; . + (($obj.amount//0)|tonumber) +
                 (($obj.fee//0)|tonumber))
@@ -594,13 +549,18 @@ function main() {
 
     echo "Send $TOTAL_STRINGꜩ to $ACCOUNT_ADDRESS"
     read -p "Paste operation hash: " FUNDING_OP_HASH
-    echo -n "Waiting for confirmation... "
-    bash -c "$CLIENT_CMD wait for $FUNDING_OP_HASH to be included --confirmations 1 --check-previous 500 > /dev/null 2>&1"
-    if [ ! $? -eq 0 ]; then
-      echo "FAILED"
-      exit 1
+
+    if [[ $FUNDING_OP_HASH == "" ]]; then
+      echo "Skipping..."
     else
-      echo "OK"
+      echo -n "Waiting for confirmation... "
+      bash -c "$CLIENT_CMD wait for $FUNDING_OP_HASH to be included --confirmations 1 --check-previous 500 > /dev/null 2>&1"
+      if [ ! $? -eq 0 ]; then
+        echo "FAILED"
+        exit 1
+      else
+        echo "OK"
+      fi
     fi
   else
     echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRINGꜩ)..."
@@ -620,29 +580,6 @@ function main() {
       source: $source
     })'
   )
-
-
-  ###
-  ### If we used an existing account, there's no
-  ### need to add a reveal to the transactions
-  ###
-
-  if [ -z $EXISTING_ACCOUNT ] || [[ $DO_REVEAL == "Y" ]]; then
-    REVEAL=$(echo "$REVEAL" | jq \
-      --compact-output \
-      --arg source $ACCOUNT_ADDRESS \
-      --arg public_key $ACCOUNT_PUBLIC_KEY \
-      'map(. + {
-        source: $source,
-        public_key: $public_key
-      })'
-    )
-    TRANSACTIONS=$(echo "$TRANSACTIONS" | jq \
-      --compact-output \
-      --argjson reveal "$REVEAL" \
-      '. |= $reveal + .'
-    )
-  fi
 
 
   ###
@@ -691,25 +628,6 @@ function main() {
     fi
   done
 
-
-  ###
-  ### The burner address has been swept and can be discarded
-  ###
-
-  if [ -z $EXISTING_ACCOUNT ] && [[ $PURGE_BURNER == 'Y' ]]; then
-    echo -n "Purging burner address... "
-    $CLIENT_CMD forget address $ACCOUNT_NAME --force
-    if [ ! $? -eq 0 ]; then
-      echo "FAILED"
-    else
-      echo "OK"
-    fi
-  else
-    account_type='burner' && [ ! -z $EXISTING_ACCOUNT ] && account_type='source'
-    echo "Keeping $account_type address..."
-    echo "  Alias: $ACCOUNT_NAME"
-    echo "  Address: $ACCOUNT_ADDRESS"
-  fi
 
   echo
   echo "DONE"
