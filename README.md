@@ -19,6 +19,7 @@ Please use this script at your own risk, and to learn how such a task can be don
 - `bash` >= 4.3
 - `jq` >= 1.5
 - `dc` >= 1.3.95
+- `gnu-sed` ~ 4.5 (important on Mac)
 
 
 ## Usage

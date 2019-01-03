@@ -531,7 +531,6 @@ function main() {
   TOTAL_REQUIRED_FUNDING=$(jq \
     --null-input \
     --compact-output \
-    --argjson reveal "$REVEAL" \
     --argjson transactions "$TRANSACTIONS" \
     '
       $transactions |
