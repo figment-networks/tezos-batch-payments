@@ -16,8 +16,8 @@ function usage() {
   echo -e "  --check\t\tCheck node access, parse provided transactions and show the total, then exit."
   echo -e "  --debug\t\tWill output a bunch of extra info during processing."
   echo
-  echo "* Note: All 'AMOUNT' values must be in µꜩ (multiply ꜩ by 1,000,000)"
-  echo "        e.g. to send 12.052ꜩ, specify 12052000 as AMOUNT"
+  echo "* Note: All 'AMOUNT' values must be in µXTZ (multiply XTZ by 1,000,000)"
+  echo "        e.g. to send 12.052 XTZ, specify 12052000 as AMOUNT"
   echo
 }
 
@@ -196,7 +196,7 @@ function setup() {
 
   if [ ! -z $CHECK_ONLY ]; then
     echo -n "Transactions valid! $(echo -n "$TRANSACTIONS" | jq '. | length') "
-    echo "found for a total of $TOTAL_STRINGꜩ"
+    echo "found for a total of $TOTAL_STRING XTZ"
     echo
     exit 0
   fi
@@ -546,7 +546,7 @@ function main() {
     ### Request that the user fund the burner address
     ###
 
-    echo "Send $TOTAL_STRINGꜩ to $ACCOUNT_ADDRESS"
+    echo "Send $TOTAL_STRING XTZ to $ACCOUNT_ADDRESS"
     read -p "Paste operation hash: " FUNDING_OP_HASH
 
     if [[ $FUNDING_OP_HASH == "" ]]; then
@@ -562,7 +562,7 @@ function main() {
       fi
     fi
   else
-    echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRINGꜩ)..."
+    echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRING XTZ)..."
   fi
   echo
 

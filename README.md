@@ -63,7 +63,7 @@ $ bash <( curl -s https://git.io/fx17m ) --use float --transactions tz1fHfqyAUzg
 Checking node access... OK
 Using account 'float'...
 
-Send 2ꜩ to tz1S5fcm3DBNRejkSY11ABij7VonPaEBYoXw
+Send 2 XTZ to tz1S5fcm3DBNRejkSY11ABij7VonPaEBYoXw
 Paste operation hash: ons97o2F2qEhqfnLafN6FzawYz7XyT2RudTdYkkMxyPMbJ4boS6
 Waiting for confirmation... OK
 
