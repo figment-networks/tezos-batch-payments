@@ -189,6 +189,23 @@ function setup() {
   fi
 
 
+  ###
+  ### Calculate the total funding needed for the entire batch
+  ###
+
+  TOTAL_REQUIRED_FUNDING=$(jq \
+    --null-input \
+    --compact-output \
+    --argjson transactions "$TRANSACTIONS" \
+    '
+      $transactions |
+      reduce .[] as $obj
+        (0; . + (($obj.amount//0)|tonumber) +
+                (($obj.fee//0)|tonumber))
+    '
+  )
+  TOTAL_STRING=$(awk "BEGIN { printf \"%0.8g\", $TOTAL_REQUIRED_FUNDING / 1000000 }")
+
 
   ###
   ### Ready to display check info if user requested it
@@ -229,6 +246,45 @@ function setup() {
   ACCOUNT_PUBLIC_KEY=$(echo -n "$ACCOUNT_INFO" | extractRpcResponseField "Public Key")
 
   echo "Using account '$ACCOUNT_NAME'"
+  echo
+
+
+  ###
+  ### Process transactions array by assigning source address
+  ###
+
+  TRANSACTIONS=$(echo "$TRANSACTIONS" | jq \
+    --compact-output \
+    --arg source "$ACCOUNT_ADDRESS" \
+    'map(. + {
+      source: $source
+    })'
+  )
+
+
+  if [ -z $SKIP_FUNDING ]; then
+    ###
+    ### Request that the user fund the float account
+    ###
+
+    echo "Send $TOTAL_STRING XTZ to $ACCOUNT_ADDRESS"
+    read -p "Paste operation hash: " FUNDING_OP_HASH
+
+    if [[ $FUNDING_OP_HASH == "" ]]; then
+      echo "Skipping..."
+    else
+      echo -n "Waiting for confirmation... "
+      bash -c "$CLIENT_CMD wait for $FUNDING_OP_HASH to be included --confirmations 1 --check-previous 500 > /dev/null 2>&1"
+      if [ ! $? -eq 0 ]; then
+        echo "FAILED"
+        exit 1
+      else
+        echo "OK"
+      fi
+    fi
+  else
+    echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRING XTZ)..."
+  fi
   echo
 }
 
@@ -524,63 +580,6 @@ function sendBatch() {
 
 
 function main() {
-  ###
-  ### Calculate the total funding needed for the entire batch
-  ###
-
-  TOTAL_REQUIRED_FUNDING=$(jq \
-    --null-input \
-    --compact-output \
-    --argjson transactions "$TRANSACTIONS" \
-    '
-      $transactions |
-      reduce .[] as $obj
-        (0; . + (($obj.amount//0)|tonumber) +
-                (($obj.fee//0)|tonumber))
-    '
-  )
-  TOTAL_STRING=$(awk "BEGIN { printf \"%0.8g\", $TOTAL_REQUIRED_FUNDING / 1000000 }")
-
-  if [ -z $SKIP_FUNDING ]; then
-    ###
-    ### Request that the user fund the burner address
-    ###
-
-    echo "Send $TOTAL_STRING XTZ to $ACCOUNT_ADDRESS"
-    read -p "Paste operation hash: " FUNDING_OP_HASH
-
-    if [[ $FUNDING_OP_HASH == "" ]]; then
-      echo "Skipping..."
-    else
-      echo -n "Waiting for confirmation... "
-      bash -c "$CLIENT_CMD wait for $FUNDING_OP_HASH to be included --confirmations 1 --check-previous 500 > /dev/null 2>&1"
-      if [ ! $? -eq 0 ]; then
-        echo "FAILED"
-        exit 1
-      else
-        echo "OK"
-      fi
-    fi
-  else
-    echo "Skipping funding ($ACCOUNT_ADDRESS requires $TOTAL_STRING XTZ)..."
-  fi
-  echo
-
-
-  ###
-  ### Process transactions array by prepending the reveal
-  ### and assigning addresses/etc
-  ###
-
-  TRANSACTIONS=$(echo "$TRANSACTIONS" | jq \
-    --compact-output \
-    --arg source "$ACCOUNT_ADDRESS" \
-    'map(. + {
-      source: $source
-    })'
-  )
-
-
   ###
   ### Simulate all transactions so we can be
   ### relatively sure they will succeed
