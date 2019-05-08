@@ -332,7 +332,7 @@ function decodeBase58() {
   echo -n "$1" | sed -e's/^\(1*\).*/\1/' -e's/1/00/g' | tr -d '\n'
   unset hex; while read line; do hex+=$(echo -n $line | tr -d '/ \n'); done \
   <<< $(dc -e "$dcr 16o0$(sed 's/./ 58*l&+/g' <<<$1)p")
-  if [ `expr $(echo -n $hex | wc -c) % 2` > 0 ]; then echo -n "0$hex"; else echo -n $hex; fi
+  if [ `expr $(echo -n $hex | wc -c) % 2` -gt 0 ]; then echo -n "0$hex"; else echo -n $hex; fi
 }
 
 function runAndClean() {
