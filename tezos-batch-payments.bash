@@ -8,6 +8,7 @@ function usage() {
   echo "Usage instructions:"
   echo "bash tezos-batch-payments.bash [options]"
   echo -e "  -h --help\t\tPrint this help info."
+  echo -e "  --fee AMOUNT\tOverride per-transaction fee (default: 1110 µXTZ)."
   echo -e "  --transactions\tTransactions to run. E.g. \`ADDR1=AMOUNT1,ADDR2=AMOUNT2,...\`"
   echo -e "  --transactions-file\tPath to a file with one \`ADDR=AMOUNT\` per line."
   echo -e "  --docker NETWORK\tUse this option if you use are using the docker scripts to run your node."
@@ -77,6 +78,11 @@ while [[ $# -gt 0 ]]; do
           }]'
         )
       done
+      shift
+      shift
+      ;;
+    --fee)
+      FEE_OVERRIDE=$2
       shift
       shift
       ;;
@@ -186,6 +192,19 @@ function setup() {
   if [ -z $TRANSACTIONS ] || [[ "$TRANSACTIONS" == "[]" ]]; then
     usage
     exit 1
+  fi
+
+
+  ###
+  ### Process transactions array by overriding fee to amount passed as arg
+  ###
+
+  if [ ! -z $FEE_OVERRIDE ]; then
+    TRANSACTIONS=$(echo "$TRANSACTIONS" | jq \
+      --compact-output \
+      --arg fee "$FEE_OVERRIDE" \
+      'map(. + { fee: $fee })'
+    )
   fi
 
 
