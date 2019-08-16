@@ -3,7 +3,7 @@
 All-in-one script for bakers to securely batch delegator reward payments.
 
 Made with :heart: by<br/>
-<a href='https://figment.network'><img alt='Figment Networks' src='https://figment.network/figment-logo.png' height='32px' align='bottom' /></a>
+<a href='https://figment.network'><img alt='Figment Networks' src='http://figment-public-assets.s3.ca-central-1.amazonaws.com/figment-inline.svg' height='32px' align='bottom' /></a>
 
 
 ----
@@ -28,7 +28,7 @@ _First, review the script! Figment is trust-worthy, but don't take our word for 
 
     bash <( curl -sL https://git.io/fxMmp ) --help
     
-This will show the various options and how to use them. For the lazy (using `tezos-client` in the current directory), here's an example of sending a donation of 1 XTZ to [Figment's Bakery](https://figment.network/tezos/bakery) :wink::
+This will show the various options and how to use them. For the lazy (using `tezos-client` in the current directory), here's an example of sending a donation of 1 XTZ to [Figment's Bakery](https://figment.network/tezos) :wink::
 
     bash <( curl -sL https://git.io/fxMmp ) --transactions tz1Scdr2HsZiQjc7bHMeBbmDRXYVvdhjJbBh=1000000
 
@@ -121,6 +121,6 @@ Thanks to:
 
 ## Feedback Welcome
 
-Please let us know what you think or if you have any ideas for improvements! [Join our Discord](https://discord.gg/zqBZ2UG)
+Please let us know what you think or if you have any ideas for improvements! [Join us on Telegram](https://t.me/FigmentNetworks)
 
-Interested in delegating with us? [Visit our Bakery](https://figment.network/tezos/bakery)
+Interested in delegating with us? [Visit our Bakery](https://figment.network/tezos)
