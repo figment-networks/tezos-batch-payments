@@ -8,7 +8,7 @@ function usage() {
   echo "Usage instructions:"
   echo "bash tezos-batch-payments.bash [options]"
   echo -e "  -h --help\t\tPrint this help info."
-  echo -e "  --fee AMOUNT\tOverride per-transaction fee (default: 1110 µXTZ)."
+  echo -e "  --fee AMOUNT\tOverride per-transaction fee (default: 1792 µXTZ)."
   echo -e "  --transactions\tTransactions to run. E.g. \`ADDR1=AMOUNT1,ADDR2=AMOUNT2,...\`"
   echo -e "  --transactions-file\tPath to a file with one \`ADDR=AMOUNT\` per line."
   echo -e "  --docker NETWORK\tUse this option if you use are using the docker scripts to run your node."
@@ -73,8 +73,8 @@ while [[ $# -gt 0 ]]; do
             "amount": $amount,
             "destination": $address,
             "storage_limit": "0",
-            "gas_limit": "10300",
-            "fee": "1110"
+            "gas_limit": "15385",
+            "fee": "1792"
           }]'
         )
       done
@@ -381,8 +381,14 @@ function simulateTransactions() {
     error "Unable to retrieve counter for $ACCOUNT_ADDRESS" "$current_counter"
   fi
 
+  local chain_id=$($CLIENT_CMD rpc get /chains/main/chain_id)
+  if ! rpcResponseOk "$chain_id" $?; then
+    error "Unable to retrieve chain ID." "$chain_id"
+  fi
+
   log "Current head: $head_hash"
   log "Current counter: $current_counter"
+  log "Chain ID: $chain_id"
 
   transactions=$(echo "$transactions" | jq \
     --compact-output \
@@ -400,11 +406,15 @@ function simulateTransactions() {
     --compact-output \
     --argjson head $head_hash \
     --argjson transactions "$transactions" \
+    --argjson chain_id $chain_id \
     --arg signature "$fake_sig" \
     '. + {
-      branch: $head,
-      contents: $transactions,
-      signature: $signature
+      operation: {
+        branch: $head,
+        contents: $transactions,
+        signature: $signature
+      },
+      chain_id: $chain_id
     }'
   )
   log "Simulation run JSON: $run_json"
