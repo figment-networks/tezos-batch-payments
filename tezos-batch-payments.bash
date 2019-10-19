@@ -419,14 +419,15 @@ function simulateTransactions() {
   )
   log "Simulation run JSON: $run_json"
 
-  run_response=$($CLIENT_CMD rpc post /chains/main/blocks/head/helpers/scripts/run_operation with $run_json)
+  run_response_tmp=$(mktemp)
+  trap 'rm -f -- "$run_response_tmp"' INT TERM HUP EXIT
+  run_response=$($CLIENT_CMD rpc post /chains/main/blocks/head/helpers/scripts/run_operation with $run_json | tr -d '\r' > $run_response_tmp)
 
   if ! rpcResponseOk "$run_response" $?; then
     error "Transaction simulation failed. Cannot continue!" "$run_json" "$run_response"
   else
-    run_response=$(cleanCr "$run_response")
-    log "Results from simulation run: $run_response"
-    bash -c "echo '$run_response' | jq -e '.contents | map(select(.metadata.operation_result.status == \"failed\")) | length == 0' > /dev/null 2>&1"
+    log "Results from simulation run: $(cat $run_response_tmp)"
+    bash -c "jq -e '.contents | map(select(.metadata.operation_result.status == \"failed\")) | length == 0' $run_response_tmp > /dev/null 2>&1"
     if [ ! $? -eq 0 ]; then
       error "Transaction simulation failed. Cannot continue!" "$run_response"
     else
@@ -583,7 +584,7 @@ function sendBatch() {
     error "Could not inject operation!" "$signed_operation" "$injection_response"
   else
     injection_response=$(cleanCr "$injection_response")
-    echo "OK"
+    echo "OK $injection_response"
   fi
 
 
